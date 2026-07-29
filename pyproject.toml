@@ -1,0 +1,37 @@
+[project]
+name = "drawthings-openai"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Josh Beard", email = "josh@jlbeard.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi",
+    "flatbuffers",
+    "grpcio",
+    "protobuf",
+    "uvicorn",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.0,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "grpcio-tools",
+    "pytest",
+    "ruff",
+    "ty",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]   # pycodestyle, pyflakes, isort, pyupgrade
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
