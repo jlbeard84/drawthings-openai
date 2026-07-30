@@ -12,6 +12,7 @@ dependencies = [
     "flatbuffers",
     "grpcio",
     "protobuf",
+    "pydantic-settings>=2.14.2",
     "uvicorn",
 ]
 
@@ -29,9 +30,18 @@ dev = [
 
 [tool.ruff]
 line-length = 100
+exclude = ["src/drawthings_openai/generated"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP"]   # pycodestyle, pyflakes, isort, pyupgrade
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "SIM",
+    "RUF",
+]   # pycodestyle, pyflakes, isort, pyupgrade
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
