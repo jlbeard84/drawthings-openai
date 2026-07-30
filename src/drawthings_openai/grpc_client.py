@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from time import monotonic
 from typing import Any, cast
 
 import grpc
@@ -9,10 +9,11 @@ from drawthings_openai.constants import (
     DEFAULT_INSECURE_SERVER,
     DEFAULT_TIMEOUT_SECONDS,
     GRPC_IDENTIFIER,
-    MODEL_CACHE_TIMEOUT_MINUTES,
+    MODEL_CACHE_TIMEOUT_SECONDS,
 )
 from drawthings_openai.errors import ClientConnectionError
 from drawthings_openai.generated import imageService_pb2, imageService_pb2_grpc
+from drawthings_openai.models import ModelCatalog
 from drawthings_openai.protocols import ImageGenerationService
 
 
@@ -25,12 +26,8 @@ class ImageClient:
     ) -> None:
         self._timeout = timeout
 
-        self._cached_models_time: datetime | None = None
-        self._cached_models: list[dict[str, Any]] = []
-        self._cached_loras: list[dict[str, Any]] = []
-        self._cached_control_nets: list[dict[str, Any]] = []
-        self._cached_textual_inversions: list[dict[str, Any]] = []
-        self._cached_upscalers: list[dict[str, Any]] = []
+        self._model_catalog: ModelCatalog = ModelCatalog()
+        self._cache_updated_at: float | None = None
 
         if is_insecure:
             self._client_channel = grpc.insecure_channel(target)
@@ -48,11 +45,11 @@ class ImageClient:
 
     def list_models(self) -> list[dict[str, Any]]:
         self._populate_model_cache()
-        return self._cached_models
+        return list(self._model_catalog.models)
 
     def list_loras(self) -> list[dict[str, Any]]:
         self._populate_model_cache()
-        return self._cached_loras
+        return list(self._model_catalog.loras)
 
     def close(self) -> None:
         self._client_channel.close()
@@ -65,24 +62,21 @@ class ImageClient:
 
     def _populate_model_cache(self) -> None:
 
-        check_time = datetime.now()
-
         if (
-            self._cached_models_time is not None
-            and check_time - self._cached_models_time
-            < timedelta(minutes=MODEL_CACHE_TIMEOUT_MINUTES)
+            self._cache_updated_at is not None
+            and monotonic() - self._cache_updated_at < MODEL_CACHE_TIMEOUT_SECONDS
         ):
             return
 
         response = self._get_echo_response()
 
         if response.HasField("override"):
-            self._cached_models = json.loads(response.override.models)
-            self._cached_loras = json.loads(response.override.loras)
-            self._cached_control_nets = json.loads(response.override.controlNets)
-            self._cached_textual_inversions = json.loads(response.override.textualInversions)
-            self._cached_upscalers = json.loads(response.override.upscalers)
-            self._cached_models_time = datetime.now()
+            self._model_catalog.models = json.loads(response.override.models)
+            self._model_catalog.loras = json.loads(response.override.loras)
+            self._model_catalog.control_nets = json.loads(response.override.controlNets)
+            self._model_catalog.textual_inversions = json.loads(response.override.textualInversions)
+            self._model_catalog.upscalers = json.loads(response.override.upscalers)
+            self._cache_updated_at = monotonic()
 
     def _get_echo_response(self) -> imageService_pb2.EchoReply:
         response = self._service_stub.Echo(
