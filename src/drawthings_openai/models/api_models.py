@@ -21,6 +21,6 @@ class OpenAILora(BaseModel):
     owned_by: str = "drawthings"
 
 
-class OpenAIModelList(BaseModel):
+class OpenAIModelList[T: OpenAIModel | OpenAILora](BaseModel):
     object: Literal["list"] = "list"
-    data: list[OpenAIModel | OpenAILora]
+    data: list[T]

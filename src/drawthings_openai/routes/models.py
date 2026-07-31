@@ -12,7 +12,7 @@ router = APIRouter(
 @router.get("/models", response_model=OpenAIModelList)
 async def list_models(
     client: ImageClientDependency,
-) -> OpenAIModelList:
+) -> OpenAIModelList[OpenAIModel]:
     drawthings_models = await client.list_models()
 
     return OpenAIModelList(
