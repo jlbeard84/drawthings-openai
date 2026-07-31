@@ -13,7 +13,7 @@ from drawthings_openai.constants import (
 )
 from drawthings_openai.errors import ClientConnectionError
 from drawthings_openai.generated import imageService_pb2, imageService_pb2_grpc
-from drawthings_openai.models import ModelCatalog
+from drawthings_openai.models.app_models import ModelCatalog
 from drawthings_openai.protocols import ImageGenerationService
 
 
@@ -78,6 +78,8 @@ class ImageClient:
             response = await self._service_stub.Echo(
                 imageService_pb2.EchoRequest(name=GRPC_IDENTIFIER), timeout=self._timeout
             )
+
+            print(response)
 
             return response
         except grpc.aio.AioRpcError as error:
