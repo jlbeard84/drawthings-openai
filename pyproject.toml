@@ -24,13 +24,16 @@ build-backend = "uv_build"
 dev = [
     "grpcio-tools",
     "pytest",
+    "pytest-asyncio>=1.4.0",
     "ruff",
     "ty",
 ]
 
 [tool.ruff]
 line-length = 100
-exclude = ["src/drawthings_openai/generated"]
+exclude = [
+    "src/drawthings_openai/generated"
+]
 
 [tool.ruff.lint]
 select = [
@@ -43,5 +46,19 @@ select = [
     "RUF",
 ]   # pycodestyle, pyflakes, isort, pyupgrade
 
+[tool.ty.src]
+exclude = [
+    "src/drawthings_openai/generated"
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = [
+    "--import-mode=importlib",
+    "--strict-markers",
+    "-ra",
+]
+markers = [
+    "integration: requires a live Draw Things server",
+]
